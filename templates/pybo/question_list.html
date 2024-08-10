@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load pybo_filter %} <!-- sub 필터 로드-->
+{% block content %}
+<div class="container my-3">     <!-- class에 “부트스트랩에 정의된 class 스타일” 적용-->
+    <table class="table">
+        <thead>                  <!-- <thead>: table head(구조) -->
+        <tr class="table-dark">     <!-- <tr>: table row 1개-->
+            <th>번호</th>             <!-- <th>: table head-->
+            <th>제목</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        <tbody>                   <!-- <tbody>: table body(구조) -->
+        {% if question_list %}            <!-- question_list 가 있으면 -->
+        {% for question in question_list %}
+        <tr>
+            <td>
+                <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
+                {{ question_list.paginator.count|sub:question_list.start_index|sub:forloop.counter0|add:1 }}
+            </td>
+            <td>
+                <a href="{% url 'pybo:detail' question.id %}">{{ question.subject }}</a>
+                <!--링크 받아, 제목 출력-->
+                {% if question.answer_set.count > 0 %} <!-- 답변 개수가 0보다 크면, 답변이 있다면-->
+                <span class="text-danger small mx-2">{{ question.answer_set.count }}</span>
+                {% endif %} <!-- 답변 개수 출력 -->
+            </td>
+            <td>{{ question.create_date }}</td>
+        </tr>    <!--질문 작성일시 출력-->
+        {% endfor %}
+        {% else %}                     <!-- question_list가 없으면-->
+        <tr>
+            <td colspan="3">질문이 없습니다.</td>    <!--열 3개 병합하여 ‘질문없습니다’ 출력-->
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    <!-- 페이징처리 시작 -->
+    <ul class="pagination justify-content-center">
+        <!-- 이전페이지 -->
+        {% if question_list.has_previous %}   <!-- 이전 페이지가 있다면 -->
+        <li class="page-item">
+            <a class="page-link" href="?page={{ question_list.previous_page_number }}">이전</a>
+        </li>                <!-- 이전 페이지 번호로 링크를 만들어, [이전] 버튼의 링크 활성화 -->
+        {% else %}   <!-- 이전 페이지가 없다면 -->
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+        </li>              <!-- 포거스 제거(-1), 현재상태 비활성화(true), 링크 비활성화 -->
+        {% endif %}
+        <!-- 페이지리스트 -->
+        {% for page_number in question_list.paginator.page_range %}  <!-- 페이지 리스트 루프 -->
+        {% if page_number >= question_list.number|add:-5 and page_number <= question_list.number|add:5 %}
+        {% if page_number == question_list.number %}     <!-- 현재 페이지와 같으면 -->
+        <li class="page-item active" aria-current="page"> <!-- active 클래스 적용하여 강조표시 -->
+            <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+        </li>                 <!-- 페이지 번호로 링크를 만들어, [페이지 번호]의 링크를 활성화 -->
+        {% else %}      <!-- 현재 페이지와 다르면 -->
+        <li class="page-item"> <!-- active 클래스 없음, 강조표시 없음-->
+            <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+        </li>                   <!-- 강조가 없을 뿐, [페이지 번호]의 링크는 활성화 -->
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+        <!-- 다음페이지 -->
+        {% if question_list.has_next %}  <!-- 다음 페이지가 있다면 -->
+        <li class="page-item">
+            <a class="page-link" href="?page={{ question_list.next_page_number }}">다음</a>
+        </li>
+        {% else %}  <!-- 다음 페이지가 없다면 -->
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+    <!-- 페이징처리 끝 -->
+    <a href="{% url 'pybo:question_create' %}" class="btn btn-primary">질문 등록하기</a>
+</div>
+{% endblock %}
